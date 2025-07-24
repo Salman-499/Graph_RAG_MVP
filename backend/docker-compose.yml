@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - .:/app
+    depends_on:
+      - neo4j
+    networks:
+      - graph-rag-network
+    restart: unless-stopped
+
+  # Neo4j Database
+  neo4j:
+    image: neo4j:5.14-community
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    env_file:
+      - .env
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - graph-rag-network
+    restart: unless-stopped
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
+
+networks:
+  graph-rag-network:
+    driver: bridge 
