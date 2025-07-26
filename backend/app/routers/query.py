@@ -8,8 +8,14 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/query", tags=["Query"])
 
-# Initialize Graph RAG service
-graph_rag_service = GraphRAGService()
+# Initialize Graph RAG service lazily
+graph_rag_service = None
+
+def get_graph_rag_service():
+    global graph_rag_service
+    if graph_rag_service is None:
+        graph_rag_service = GraphRAGService()
+    return graph_rag_service
 
 @router.post("/", response_model=QueryResponse)
 async def process_query(request: QueryRequest):
@@ -25,7 +31,8 @@ async def process_query(request: QueryRequest):
         logger.info(f"Processing query: {request.query}")
         
         # Process the query using Graph RAG
-        response = graph_rag_service.process_query(
+        service = get_graph_rag_service()
+        response = service.process_query(
             query=request.query,
             max_results=request.max_results,
             include_graph_context=request.include_graph_context

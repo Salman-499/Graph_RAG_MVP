@@ -20,6 +20,9 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip
+# Install CPU-only PyTorch first (much smaller)
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download spaCy model

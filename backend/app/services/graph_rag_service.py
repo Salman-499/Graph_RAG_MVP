@@ -18,8 +18,26 @@ class GraphRAGService:
     """Core Graph RAG service combining vector search and graph traversal"""
     
     def __init__(self):
-        self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
-        self.nlp = spacy.load("en_core_web_sm")  # For entity extraction
+        try:
+            self.embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL)
+            logger.info(f"Loaded embedding model: {settings.EMBEDDING_MODEL}")
+        except Exception as e:
+            logger.error(f"Failed to load embedding model: {e}")
+            # Fallback to a simpler model
+            try:
+                self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+                logger.info("Loaded fallback embedding model: all-MiniLM-L6-v2")
+            except Exception as e2:
+                logger.error(f"Failed to load fallback model: {e2}")
+                raise Exception("Could not load any embedding model")
+        
+        try:
+            self.nlp = spacy.load("en_core_web_sm")  # For entity extraction
+            logger.info("Loaded spaCy model: en_core_web_sm")
+        except Exception as e:
+            logger.error(f"Failed to load spaCy model: {e}")
+            raise Exception("Could not load spaCy model")
+        
         self.chroma_manager = get_chroma_manager()
         self.neo4j_manager = get_neo4j_manager()
     

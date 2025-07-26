@@ -50,11 +50,28 @@ async def startup_event():
         logger.error("Invalid settings configuration")
         return
     
-    # Initialize databases
-    if initialize_databases():
-        logger.info("All databases initialized successfully")
-    else:
-        logger.error("Failed to initialize databases")
+    # Wait for Neo4j to be ready
+    logger.info("Waiting for Neo4j to be ready...")
+    import time
+    import asyncio
+    
+    max_retries = 30
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            if initialize_databases():
+                logger.info("All databases initialized successfully")
+                return
+            else:
+                logger.warning(f"Database initialization failed, retrying... ({retry_count + 1}/{max_retries})")
+        except Exception as e:
+            logger.warning(f"Database connection failed, retrying... ({retry_count + 1}/{max_retries}): {e}")
+        
+        retry_count += 1
+        await asyncio.sleep(2)  # Wait 2 seconds between retries
+    
+    logger.error("Failed to initialize databases after maximum retries")
 
 @app.get("/")
 async def root():

@@ -7,8 +7,14 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/documents", tags=["Documents"])
 
-# Initialize Graph RAG service
-graph_rag_service = GraphRAGService()
+# Initialize Graph RAG service lazily
+graph_rag_service = None
+
+def get_graph_rag_service():
+    global graph_rag_service
+    if graph_rag_service is None:
+        graph_rag_service = GraphRAGService()
+    return graph_rag_service
 
 @router.post("/upload", response_model=DocumentResponse)
 async def upload_document(document: DocumentUpload):
@@ -24,7 +30,8 @@ async def upload_document(document: DocumentUpload):
         logger.info(f"Uploading document of type: {document.document_type}")
         
         # Add document to the system
-        doc_id = graph_rag_service.add_document(
+        service = get_graph_rag_service()
+        doc_id = service.add_document(
             content=document.content,
             metadata=document.metadata
         )
@@ -52,7 +59,8 @@ async def batch_upload_documents(documents: List[DocumentUpload]):
         responses = []
         for document in documents:
             try:
-                doc_id = graph_rag_service.add_document(
+                service = get_graph_rag_service()
+                doc_id = service.add_document(
                     content=document.content,
                     metadata=document.metadata
                 )
